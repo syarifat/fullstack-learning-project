@@ -1,6 +1,10 @@
 # TeleConsult - Platform Konsultasi Video
 
-Full-stack learning project: video consultation platform dengan payment gateway integration, real-time video call, dan async job processing.
+✅ **PROJECT COMPLETE** - Full-stack video consultation platform dengan payment gateway integration, real-time video call, dan async job processing.
+
+**Status:** Production Ready  
+**Completion:** 22/22 tasks (100%)  
+**Timeline:** Week 1-6 (Completed ahead of schedule)
 
 ## Tech Stack
 
@@ -203,7 +207,52 @@ Docs: https://docs.midtrans.com/
 
 Docs: https://docs.agora.io/
 
-## Troubleshooting
+## Deployment
+
+### Development
+```bash
+# Start all services
+docker compose up -d
+
+# Run migrations
+cd backend && npm run prisma:migrate
+
+# Start backend dev server
+cd backend && npm run dev
+
+# Start frontend dev server (new terminal)
+cd frontend && npm run dev
+
+# Start workers (optional, new terminals)
+cd backend && npm run worker:email
+cd backend && npm run worker:payment
+```
+
+### Production
+```bash
+# Configure environment
+cp .env.prod.example .env.prod
+# Edit .env.prod with production values
+
+# Deploy
+./deploy.sh production
+
+# Or manually with docker compose
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### CI/CD
+GitHub Actions automatically:
+- Run tests on PR
+- Build & push Docker images on merge to main
+- Deploy to production server
+
+**Required GitHub Secrets:**
+- `DOCKER_USERNAME` - Docker Hub username
+- `DOCKER_PASSWORD` - Docker Hub token
+- `DEPLOY_HOST` - Production server IP
+- `DEPLOY_USER` - SSH user
+- `DEPLOY_SSH_KEY` - SSH private key
 
 ### Docker services tidak start
 

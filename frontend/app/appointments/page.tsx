@@ -71,6 +71,45 @@ export default function AppointmentsPage() {
     }
   };
 
+  const handlePayment = async (id: string) => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+      const res = await fetch('http://localhost:3001/api/payments/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ appointmentId: id })
+      });
+
+      if (!res.ok) throw new Error('Failed to initiate payment');
+
+      const data = await res.json();
+
+      // Open Midtrans Snap
+      (window as any).snap.pay(data.token, {
+        onSuccess: function(result: any) {
+          router.push(`/payment/success?order_id=${data.transactionId}`);
+        },
+        onPending: function(result: any) {
+          router.push(`/payment/pending?order_id=${data.transactionId}`);
+        },
+        onError: function(result: any) {
+          router.push(`/payment/error?order_id=${data.transactionId}`);
+        },
+        onClose: function() {
+          console.log('Payment popup closed');
+        }
+      });
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Failed to initiate payment');
+    }
+  };
+
   if (loading) {
     return (
       <div className="scanlines min-h-screen flex items-center justify-center">
@@ -129,11 +168,34 @@ export default function AppointmentsPage() {
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    {apt.status === 'PENDING_PAYMENT' || apt.status === 'CONFIRMED' ? (
+                  <div className="text-right space-y-2">
+                    {apt.status === 'CONFIRMED' && (
+                      <button
+                        onClick={() => router.push(`/video?appointment=${apt.id}`)}
+                        className="btn btn-primary text-sm w-full"
+                      >
+                        JOIN VIDEO CALL
+                      </button>
+                    )}
+                    {apt.status === 'PENDING_PAYMENT' ? (
+                      <div className="space-x-4">
+                        <button
+                          onClick={() => handlePayment(apt.id)}
+                          className="btn btn-primary text-sm"
+                        >
+                          PAY NOW
+                        </button>
+                        <button
+                          onClick={() => handleCancel(apt.id)}
+                          className="btn text-sm"
+                        >
+                          CANCEL
+                        </button>
+                      </div>
+                    ) : apt.status === 'CONFIRMED' ? (
                       <button
                         onClick={() => handleCancel(apt.id)}
-                        className="btn text-sm"
+                        className="btn text-sm w-full"
                       >
                         CANCEL
                       </button>

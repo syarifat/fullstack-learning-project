@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "worker:email": "tsx src/workers/email.worker.ts",
+    "worker:payment": "tsx src/workers/payment.worker.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -18,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "agora-access-token": "^2.0.4",
     "amqplib": "^2.2.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
@@ -27,6 +29,7 @@
     "helmet": "^8.3.0",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
+    "midtrans-client": "^1.4.3",
     "prisma": "^5.22.0"
   },
   "devDependencies": {

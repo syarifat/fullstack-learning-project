@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<any>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -29,8 +30,25 @@ export default function DashboardPage() {
     }
 
     setUser(JSON.parse(storedUser));
-    setLoading(false);
+    fetchAnalytics(token);
   }, [router]);
+
+  const fetchAnalytics = async (token: string) => {
+    try {
+      const res = await fetch('http://localhost:3001/api/analytics', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAnalytics(data);
+      }
+    } catch (error) {
+      console.error('Fetch analytics error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
@@ -87,6 +105,55 @@ export default function DashboardPage() {
         </div>
 
         <hr />
+
+        {/* Analytics */}
+        {analytics && (
+          <>
+            <div className="py-12">
+              <h2 className="text-4xl mb-8">STATISTICS</h2>
+
+              <div className="grid grid-cols-4 gap-1 bg-[#333333]">
+                <div className="bg-[#121212] p-6 text-center">
+                  <div className="text-4xl font-black mb-2 text-[#E61919]">
+                    {analytics.totalAppointments || 0}
+                  </div>
+                  <div className="text-xs">TOTAL APPOINTMENTS</div>
+                </div>
+                <div className="bg-[#121212] p-6 text-center">
+                  <div className="text-4xl font-black mb-2 text-[#4AF626]">
+                    {analytics.completedAppointments || 0}
+                  </div>
+                  <div className="text-xs">COMPLETED</div>
+                </div>
+                {user?.role === 'CONSULTANT' ? (
+                  <>
+                    <div className="bg-[#121212] p-6 text-center">
+                      <div className="text-4xl font-black mb-2 text-[#E61919]">
+                        {analytics.completionRate || 0}%
+                      </div>
+                      <div className="text-xs">COMPLETION RATE</div>
+                    </div>
+                    <div className="bg-[#121212] p-6 text-center">
+                      <div className="text-2xl font-black mb-2">
+                        IDR {(analytics.totalRevenue || 0).toLocaleString()}
+                      </div>
+                      <div className="text-xs">TOTAL REVENUE</div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-[#121212] p-6 text-center col-span-2">
+                    <div className="text-2xl font-black mb-2">
+                      IDR {(analytics.totalSpent || 0).toLocaleString()}
+                    </div>
+                    <div className="text-xs">TOTAL SPENT</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <hr />
+          </>
+        )}
 
         {/* Quick Actions */}
         <div className="py-12">

@@ -1,0 +1,132 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: teleconsult-postgres-prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-teleconsult}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-teleconsult_prod}
+      POSTGRES_DB: ${POSTGRES_DB:-teleconsult}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-teleconsult}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: teleconsult-redis-prod
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: teleconsult-rabbitmq-prod
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-teleconsult}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-teleconsult_prod}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: teleconsult-backend-prod
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-teleconsult}:${POSTGRES_PASSWORD:-teleconsult_prod}@postgres:5432/${POSTGRES_DB:-teleconsult}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-teleconsult}:${RABBITMQ_PASSWORD:-teleconsult_prod}@rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY}
+      MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY}
+      AGORA_APP_ID: ${AGORA_APP_ID}
+      AGORA_APP_CERTIFICATE: ${AGORA_APP_CERTIFICATE}
+      PORT: 3001
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: teleconsult-frontend-prod
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
+      NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY}
+      NEXT_PUBLIC_AGORA_APP_ID: ${AGORA_APP_ID}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  email-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: teleconsult-email-worker
+    command: ["npm", "run", "worker:email"]
+    environment:
+      NODE_ENV: production
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-teleconsult}:${RABBITMQ_PASSWORD:-teleconsult_prod}@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  payment-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: teleconsult-payment-worker
+    command: ["npm", "run", "worker:payment"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-teleconsult}:${POSTGRES_PASSWORD:-teleconsult_prod}@postgres:5432/${POSTGRES_DB:-teleconsult}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-teleconsult}:${RABBITMQ_PASSWORD:-teleconsult_prod}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
