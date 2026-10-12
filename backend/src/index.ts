@@ -3,6 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
+import appointmentRoutes from './routes/appointment.routes';
+import slotRoutes from './routes/slot.routes';
+import { connectRabbitMQ } from './config/rabbitmq';
 
 dotenv.config();
 
@@ -29,6 +32,8 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/slots', slotRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -39,6 +44,11 @@ app.use((req, res) => {
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Internal server error' });
+});
+
+// Initialize RabbitMQ
+connectRabbitMQ().catch((err) => {
+  console.error('RabbitMQ connection failed:', err);
 });
 
 app.listen(PORT, () => {

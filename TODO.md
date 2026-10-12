@@ -6,14 +6,14 @@
 
 ---
 
-## 📍 FASE 1: Setup & Auth (Week 1)
+## 📍 FASE 1: Setup & Auth (Week 1) ✅ COMPLETE
 
-- [ ] Setup auth system - JWT middleware, bcrypt password hashing
-- [ ] Buat auth controllers (register, login, refresh, logout)
-- [ ] Buat auth routes dan validation middleware
-- [ ] Setup Redis session management
-- [ ] Frontend - Industrial Brutalist base layout (nav, typography, grid)
-- [ ] Frontend - Auth pages (login, register) dengan Brutalist UI
+- [x] Setup auth system - JWT middleware, bcrypt password hashing
+- [x] Buat auth controllers (register, login, refresh, logout)
+- [x] Buat auth routes dan validation middleware
+- [x] Setup Redis session management
+- [x] Frontend - Industrial Brutalist base layout (nav, typography, grid)
+- [x] Frontend - Auth pages (login, register) dengan Brutalist UI
 
 ---
 

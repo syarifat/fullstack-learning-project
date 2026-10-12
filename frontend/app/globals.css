@@ -1,26 +1,179 @@
 @import "tailwindcss";
 
+/* INDUSTRIAL BRUTALIST - TACTICAL TELEMETRY MODE */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #121212;
+  --fg-primary: #EAEAEA;
+  --fg-secondary: #888888;
+  --accent-red: #E61919;
+  --accent-green: #4AF626;
+  --border: #333333;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-primary);
+  color: var(--fg-primary);
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* TYPOGRAPHY - MACRO */
+h1, h2, h3 {
+  font-family: var(--font-sans), 'Inter', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: clamp(3rem, 8vw, 8rem);
+}
+
+h2 {
+  font-size: clamp(2rem, 5vw, 4rem);
+}
+
+h3 {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* GRID & BORDERS */
+.grid-container {
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+.grid-container > * {
+  background: var(--bg-primary);
+  padding: 1rem;
+}
+
+.border-brutal {
+  border: 2px solid var(--border);
+}
+
+hr {
+  border: none;
+  border-top: 2px solid var(--border);
+  margin: 2rem 0;
+}
+
+/* TACTICAL ELEMENTS */
+.tactical-frame::before {
+  content: '[ ';
+  color: var(--accent-red);
+}
+
+.tactical-frame::after {
+  content: ' ]';
+  color: var(--accent-red);
+}
+
+.status-active {
+  color: var(--accent-green);
+}
+
+.status-alert {
+  color: var(--accent-red);
+}
+
+/* SCANLINES EFFECT */
+.scanlines {
+  position: relative;
+}
+
+.scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.1) 2px,
+    rgba(0, 0, 0, 0.1) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* BUTTONS */
+button, .btn {
+  background: transparent;
+  border: 2px solid var(--fg-primary);
+  color: var(--fg-primary);
+  padding: 0.75rem 1.5rem;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:hover, .btn:hover {
+  background: var(--fg-primary);
+  color: var(--bg-primary);
+}
+
+button:disabled, .btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+button.btn-primary {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+button.btn-primary:hover {
+  background: var(--accent-red);
+  color: var(--bg-primary);
+}
+
+/* INPUTS */
+input, textarea, select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--fg-primary);
+  padding: 0.75rem;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent-red);
+}
+
+/* LINKS */
+a {
+  color: var(--fg-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+a:hover {
+  border-bottom-color: var(--accent-red);
 }
