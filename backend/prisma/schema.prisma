@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENT
+  CONSULTANT
+  ADMIN
+}
+
+enum AppointmentStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         UserRole
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  profile              Profile?
+  clientAppointments   Appointment[] @relation("ClientAppointments")
+  consultantAppointments Appointment[] @relation("ConsultantAppointments")
+
+  @@map("users")
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  userId       String   @unique @map("user_id")
+  name         String
+  specialty    String?
+  hourlyRate   Int?     @map("hourly_rate")
+  bio          String?
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slots Slot[]
+
+  @@map("profiles")
+}
+
+model Slot {
+  id          String @id @default(cuid())
+  profileId   String @map("profile_id")
+  dayOfWeek   Int    @map("day_of_week") // 0-6 (Sunday-Saturday)
+  startTime   String @map("start_time") // HH:MM format
+  endTime     String @map("end_time")
+  isActive    Boolean @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("appointment_slots")
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  consultantId  String            @map("consultant_id")
+  clientId      String            @map("client_id")
+  scheduledAt   DateTime          @map("scheduled_at")
+  duration      Int               // minutes
+  status        AppointmentStatus
+  roomId        String?           @map("room_id")
+  actualDuration Int?             @map("actual_duration") // actual call duration
+  notes         String?
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  consultant   User          @relation("ConsultantAppointments", fields: [consultantId], references: [id])
+  client       User          @relation("ClientAppointments", fields: [clientId], references: [id])
+  transaction  Transaction?
+
+  @@index([consultantId, scheduledAt])
+  @@index([clientId, scheduledAt])
+  @@index([status])
+  @@map("appointments")
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  appointmentId String            @unique @map("appointment_id")
+  amount        Int
+  paymentMethod String?           @map("payment_method")
+  status        TransactionStatus
+  gatewayRef    String?           @map("gateway_ref")
+  gatewayData   Json?             @map("gateway_data")
+  paidAt        DateTime?         @map("paid_at")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  logs        PaymentLog[]
+
+  @@index([status])
+  @@index([gatewayRef])
+  @@map("transactions")
+}
+
+model PaymentLog {
+  id            String   @id @default(cuid())
+  transactionId String   @map("transaction_id")
+  eventType     String   @map("event_type")
+  payload       Json
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@map("payment_logs")
+}
